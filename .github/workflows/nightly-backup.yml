@@ -1,0 +1,19 @@
+name: nightly-backup
+
+on:
+  schedule:
+    - cron: '0 20 * * *'   # ~1:30 AM IST
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump Neon database
+        run: pg_dump "${{ secrets.DATABASE_URL }}" -F c -f backup.dump
+
+      - name: Upload as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: backup.dump
+          retention-days: 30

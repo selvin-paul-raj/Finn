@@ -1,0 +1,23 @@
+[project]
+name = "finn"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi==0.115.*",
+    "pydantic==2.*",
+    "python-dotenv==1.*",
+    "uvicorn[standard]==0.32.*",
+    "sqlalchemy[asyncio]==2.*",
+    "asyncpg==0.30.*",
+    "alembic==1.14.*",
+    "httpx==0.28.*",
+    "google-genai==1.*",
+    "mcp==1.*",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

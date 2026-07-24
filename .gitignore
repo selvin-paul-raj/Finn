@@ -1,0 +1,16 @@
+.claude/*
+.claude-flow/*
+.tokensave/*
+.git
+ruvector.db
+.agents/*
+.swarm/*
+
+
+.env
+
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

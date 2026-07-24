@@ -1,0 +1,21 @@
+name: daily-checkin
+
+on:
+  schedule:
+    # 20:30 UTC (previous day) = 02:00 IST
+    - cron: '30 20 * * *'
+    # 08:30 UTC = 14:00 IST
+    - cron: '30 8 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake backend
+        run: curl -s https://<your-render-url>/healthz || true   # absorbs cold start
+
+      - name: Trigger check-in
+        run: |
+          curl -s -X POST https://<your-render-url>/trigger \
+            -H "Authorization: Bearer ${{ secrets.TRIGGER_SECRET }}"
