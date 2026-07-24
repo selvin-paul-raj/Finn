@@ -62,7 +62,7 @@ async def test_missing_secret_header_rejected_before_parsing(seeded, monkeypatch
         called.append(text)
         raise AssertionError("parser must not be called for an unauthenticated request")
 
-    monkeypatch.setattr(telegram.GeminiEventParser, "parse", fake_parse)
+    monkeypatch.setattr(telegram.NvidiaEventParser, "parse", fake_parse)
 
     with pytest.raises(Exception) as exc_info:
         await telegram.handle_webhook(TELEGRAM_UPDATE, None)
@@ -78,7 +78,7 @@ async def test_wrong_secret_header_rejected_before_parsing(seeded, monkeypatch):
         called.append(text)
         raise AssertionError("parser must not be called for an unauthenticated request")
 
-    monkeypatch.setattr(telegram.GeminiEventParser, "parse", fake_parse)
+    monkeypatch.setattr(telegram.NvidiaEventParser, "parse", fake_parse)
 
     with pytest.raises(Exception) as exc_info:
         await telegram.handle_webhook(TELEGRAM_UPDATE, "wrong-secret")
@@ -90,10 +90,10 @@ async def test_wrong_secret_header_rejected_before_parsing(seeded, monkeypatch):
 async def test_valid_message_calls_parser_and_writes_event(
     seeded, no_real_telegram_calls, monkeypatch
 ):
-    async def fake_call_gemini(self, text):
+    async def fake_call_nvidia(self, text):
         return {"direction": "debit", "amount": "120", "category": "Food", "confidence": 0.95}
 
-    monkeypatch.setattr(telegram.GeminiEventParser, "_call_gemini", fake_call_gemini)
+    monkeypatch.setattr(telegram.NvidiaEventParser, "_call_nvidia", fake_call_nvidia)
 
     result = await telegram.handle_webhook(TELEGRAM_UPDATE, VALID_SECRET)
 
@@ -109,10 +109,10 @@ async def test_valid_message_writes_row_matching_parsed_event(
 ):
     monkeypatch.setattr(telegram, "async_session_factory", test_session_factory)
 
-    async def fake_call_gemini(self, text):
+    async def fake_call_nvidia(self, text):
         return {"direction": "debit", "amount": "120", "category": "Food", "confidence": 0.95}
 
-    monkeypatch.setattr(telegram.GeminiEventParser, "_call_gemini", fake_call_gemini)
+    monkeypatch.setattr(telegram.NvidiaEventParser, "_call_nvidia", fake_call_nvidia)
 
     await telegram.handle_webhook(TELEGRAM_UPDATE, VALID_SECRET)
 

@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 import httpx
 import sqlalchemy as sa
 from fastapi import HTTPException
+from pydantic import ValidationError
+
 
 from app.config import TELEGRAM_BOT_TOKEN, TRIGGER_SECRET
 from app.db import async_session_factory
@@ -59,7 +61,39 @@ async def handle_webhook(payload: dict, secret_header: str | None) -> dict:
         return {"ok": True, "skipped": "not a text message"}
     chat_id, text = extracted
 
-    parsed = await NvidiaEventParser().parse(text)
+    if text.startswith("/"):
+        # Bind the chat_id for reminders on first contact
+        async with async_session_factory() as session:
+            user_id = await get_default_user_id(session)
+            await session.execute(
+                sa.text(
+                    "UPDATE users SET telegram_chat_id = :chat_id "
+                    "WHERE id = :user_id AND telegram_chat_id IS NULL"
+                ),
+                {"chat_id": chat_id, "user_id": user_id},
+            )
+            await session.commit()
+
+        greeting = (
+            "Welcome to Finn! 🚀\n\n"
+            "I am your personal finance tracker bot. You can log expenses or income by messaging me in plain text.\n"
+            "Examples:\n"
+            "- 'lunch 120'\n"
+            "- 'friend gave 500 for dinner'\n"
+            "- 'salary 50000'\n\n"
+            "Send me a transaction to get started!"
+        )
+        await send_message(chat_id, greeting)
+        return {"ok": True, "command": text}
+
+    try:
+        parsed = await NvidiaEventParser().parse(text)
+    except ValidationError:
+        await send_message(
+            chat_id,
+            "I couldn't parse that transaction. Please try again (e.g., 'lunch 120' or 'salary 5000')."
+        )
+        return {"ok": True, "error": "parse_validation_error"}
 
     async with async_session_factory() as session:
         user_id = await get_default_user_id(session)

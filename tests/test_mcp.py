@@ -93,10 +93,11 @@ async def test_pending_events_tool_returns_correct_data(seeded):
 
 @pytest.mark.anyio
 async def test_log_event_tool_parses_and_writes_event(seeded, monkeypatch):
-    async def fake_call_gemini(self, text):
+    async def fake_call_nvidia(self, text):
         return {"direction": "debit", "amount": "45", "category": "Transport", "confidence": 0.92}
 
-    monkeypatch.setattr(mcp_server.GeminiEventParser, "_call_gemini", fake_call_gemini)
+    monkeypatch.setattr(mcp_server.NvidiaEventParser, "_call_nvidia", fake_call_nvidia)
+
 
     result = await mcp_server.mcp.call_tool("log_event", {"text": "cab 45"})
     payload = _unwrap(result)
