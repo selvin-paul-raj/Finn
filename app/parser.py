@@ -3,7 +3,7 @@ import json
 import time
 from typing import Protocol
 
-import httpx
+from openai import AsyncOpenAI
 
 from app.config import NVIDIA_API_KEY, NVIDIA_BASE_URL
 from app.schemas import ParsedEvent
@@ -67,41 +67,39 @@ class NvidiaEventParser:
         if not NVIDIA_API_KEY:
             raise ValueError("NVIDIA_API_KEY environment variable is not set")
 
-        headers = {
-            "Authorization": f"Bearer {NVIDIA_API_KEY}",
-            "Content-Type": "application/json",
-        }
+        client = AsyncOpenAI(
+            base_url=NVIDIA_BASE_URL,
+            api_key=NVIDIA_API_KEY,
+        )
 
-        payload = {
-            "model": "deepseek-ai/deepseek-v4-flash",
-            "messages": [
+        completion = await client.chat.completions.create(
+            model="deepseek-ai/deepseek-v4-flash",
+            messages=[
                 {"role": "system", "content": _SYSTEM_PROMPT},
                 {"role": "user", "content": text}
             ],
-            "temperature": 0.2,
-            "chat_template_kwargs": {
-                "thinking": True,
-                "reasoning_effort": "high"
-            }
-        }
+            temperature=1.0,
+            top_p=0.95,
+            max_tokens=16384,
+            extra_body={
+                "chat_template_kwargs": {
+                    "thinking": True,
+                    "reasoning_effort": "high"
+                }
+            },
+            stream=False
+        )
 
+        content = completion.choices[0].message.content
+        if not content:
+            raise ValueError("Received empty content from NVIDIA completions API")
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{NVIDIA_BASE_URL.rstrip('/')}/chat/completions",
-                json=payload,
-                headers=headers,
-            )
-            response.raise_for_status()
-            res_json = response.json()
-            content = res_json["choices"][0]["message"]["content"]
+        # Clean up markdown code block wrapping if present
+        content_str = content.strip()
+        if content_str.startswith("```json"):
+            content_str = content_str[7:]
+        if content_str.endswith("```"):
+            content_str = content_str[:-3]
+        content_str = content_str.strip()
 
-            # Clean up markdown code block wrapping if present
-            content_str = content.strip()
-            if content_str.startswith("```json"):
-                content_str = content_str[7:]
-            if content_str.endswith("```"):
-                content_str = content_str[:-3]
-            content_str = content_str.strip()
-
-            return json.loads(content_str)
+        return json.loads(content_str)

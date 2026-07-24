@@ -112,12 +112,12 @@ Template for each entry:
 ```
 
 ### Replaced Gemini with NVIDIA Parser (DeepSeek-v4-flash) — 2026-07-24
-- Files touched: `app/config.py`, `app/parser.py`, `app/telegram.py`, `app/mcp_server.py`, `tests/test_parser.py`, `.env.example`, `.env`, `README.md`, `docs/DEPLOYMENT.md`
+- Files touched: `app/config.py`, `app/parser.py`, `app/telegram.py`, `app/mcp_server.py`, `tests/test_parser.py`, `.env.example`, `.env`, `README.md`, `docs/DEPLOYMENT.md`, `pyproject.toml`
 - Tests added: None (updated existing `test_parser.py` tests)
 - Full suite: 20/20 non-DB tests passing
 - What's next: Commit changes, push to GitHub, and deploy on Render (updating environment variables on Render to use `NVIDIA_API_KEY` and `NVIDIA_BASE_URL` instead of `GEMINI_API_KEY`).
 - Blocked: None
-- Note: Resolved 503 "Worker local total request limit reached" NIM errors by appending `chat_template_kwargs: {"thinking": True, "reasoning_effort": "high"}` to the request payload, which enables successful 200 OK completions.
+- Note: Resolved 503 "Worker local total request limit reached" NIM errors by utilizing the official `openai` Python SDK client (`AsyncOpenAI`) with `chat_template_kwargs: {"thinking": True, "reasoning_effort": "high"}` configuration in request payload. Added `openai` to `pyproject.toml`.
 
 
 ### Seeding script & Deployment documentation — 2026-07-24
