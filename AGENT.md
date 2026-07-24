@@ -21,7 +21,9 @@ over what's written here, then fix this file immediately.
   **New documentation and seeding scripts added** on 2026-07-24 (`app/seed.py`
   and `docs/DEPLOYMENT.md`).
   **Replaced Gemini parser with NVIDIA API parser** utilizing model
-  "deepseek-ai/deepseek-v4-flash" with 40 RPM sliding-window rate limiting.
+  "deepseek-ai/deepseek-v4-flash" with 40 RPM sliding-window rate limiting
+  and `chat_template_kwargs: {"thinking": True, "reasoning_effort": "high"}` configuration.
+
 - **Tests:** 42/42 passing (full suite, against the real scratch Neon
   branch for all DB-touching tests)
 - **IN PROGRESS:** none
@@ -115,6 +117,8 @@ Template for each entry:
 - Full suite: 20/20 non-DB tests passing
 - What's next: Commit changes, push to GitHub, and deploy on Render (updating environment variables on Render to use `NVIDIA_API_KEY` and `NVIDIA_BASE_URL` instead of `GEMINI_API_KEY`).
 - Blocked: None
+- Note: Resolved 503 "Worker local total request limit reached" NIM errors by appending `chat_template_kwargs: {"thinking": True, "reasoning_effort": "high"}` to the request payload, which enables successful 200 OK completions.
+
 
 ### Seeding script & Deployment documentation — 2026-07-24
 - Files touched: `app/seed.py`, `docs/DEPLOYMENT.md`, `pyproject.toml`

@@ -79,7 +79,12 @@ class NvidiaEventParser:
                 {"role": "user", "content": text}
             ],
             "temperature": 0.2,
+            "chat_template_kwargs": {
+                "thinking": True,
+                "reasoning_effort": "high"
+            }
         }
+
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
