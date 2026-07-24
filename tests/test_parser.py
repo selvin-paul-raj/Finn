@@ -1,13 +1,13 @@
 """Parser tests: fixed input strings -> expected ParsedEvent output.
 
-Gemini is mocked (`GeminiEventParser._call_gemini`) — no live API calls here.
+NVIDIA is mocked (`NvidiaEventParser._call_nvidia`) — no live API calls here.
 """
 
 from decimal import Decimal
 
 import pytest
 
-from app.parser import GeminiEventParser
+from app.parser import NvidiaEventParser
 from app.schemas import ParsedEvent
 
 
@@ -18,7 +18,7 @@ def anyio_backend():
 
 @pytest.mark.anyio
 async def test_parse_lunch_expense(monkeypatch):
-    async def fake_call_gemini(self, text):
+    async def fake_call_nvidia(self, text):
         return {
             "direction": "debit",
             "amount": "120",
@@ -26,9 +26,9 @@ async def test_parse_lunch_expense(monkeypatch):
             "confidence": 0.95,
         }
 
-    monkeypatch.setattr(GeminiEventParser, "_call_gemini", fake_call_gemini)
+    monkeypatch.setattr(NvidiaEventParser, "_call_nvidia", fake_call_nvidia)
 
-    parser = GeminiEventParser()
+    parser = NvidiaEventParser()
     result = await parser.parse("lunch 120")
 
     assert result == ParsedEvent(
@@ -41,7 +41,7 @@ async def test_parse_lunch_expense(monkeypatch):
 
 @pytest.mark.anyio
 async def test_parse_friend_gave_money_no_reason(monkeypatch):
-    async def fake_call_gemini(self, text):
+    async def fake_call_nvidia(self, text):
         return {
             "direction": "credit",
             "amount": "500",
@@ -50,9 +50,9 @@ async def test_parse_friend_gave_money_no_reason(monkeypatch):
             "notes": "no reason given",
         }
 
-    monkeypatch.setattr(GeminiEventParser, "_call_gemini", fake_call_gemini)
+    monkeypatch.setattr(NvidiaEventParser, "_call_nvidia", fake_call_nvidia)
 
-    parser = GeminiEventParser()
+    parser = NvidiaEventParser()
     result = await parser.parse("friend gave 500 no reason")
 
     assert result == ParsedEvent(
@@ -66,7 +66,7 @@ async def test_parse_friend_gave_money_no_reason(monkeypatch):
 
 @pytest.mark.anyio
 async def test_parse_emi_paid(monkeypatch):
-    async def fake_call_gemini(self, text):
+    async def fake_call_nvidia(self, text):
         return {
             "direction": "debit",
             "amount": "1500",
@@ -74,9 +74,9 @@ async def test_parse_emi_paid(monkeypatch):
             "confidence": 0.9,
         }
 
-    monkeypatch.setattr(GeminiEventParser, "_call_gemini", fake_call_gemini)
+    monkeypatch.setattr(NvidiaEventParser, "_call_nvidia", fake_call_nvidia)
 
-    parser = GeminiEventParser()
+    parser = NvidiaEventParser()
     result = await parser.parse("EMI paid")
 
     assert result == ParsedEvent(
@@ -92,7 +92,7 @@ async def test_parse_low_confidence_is_surfaced_not_dropped(monkeypatch):
     """Confidence-threshold decision logic is out of scope for this task —
     only assert the raw low confidence value survives into ParsedEvent."""
 
-    async def fake_call_gemini(self, text):
+    async def fake_call_nvidia(self, text):
         return {
             "direction": "debit",
             "amount": "50",
@@ -100,9 +100,9 @@ async def test_parse_low_confidence_is_surfaced_not_dropped(monkeypatch):
             "confidence": 0.3,
         }
 
-    monkeypatch.setattr(GeminiEventParser, "_call_gemini", fake_call_gemini)
+    monkeypatch.setattr(NvidiaEventParser, "_call_nvidia", fake_call_nvidia)
 
-    parser = GeminiEventParser()
+    parser = NvidiaEventParser()
     result = await parser.parse("something unclear")
 
     assert result.confidence == 0.3

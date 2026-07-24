@@ -20,13 +20,15 @@ over what's written here, then fix this file immediately.
   manager verified working.
   **New documentation and seeding scripts added** on 2026-07-24 (`app/seed.py`
   and `docs/DEPLOYMENT.md`).
+  **Replaced Gemini parser with NVIDIA API parser** utilizing model
+  "deepseek-ai/deepseek-v4-flash" with 40 RPM sliding-window rate limiting.
 - **Tests:** 42/42 passing (full suite, against the real scratch Neon
   branch for all DB-touching tests)
 - **IN PROGRESS:** none
 - **Next up:** Nothing left to *build* per the v1 spec. Remaining items
   are manual/operational: (1) the two doc edits noted below the user
   needs to make by hand, (2) Task 26 (deploy to Render -- Telegram bot +
-  Gemini key + Neon prod DB are all confirmed live and working locally),
+  NVIDIA key + Neon prod DB are all confirmed live and working locally),
   (3) Task 27 (multi-day live verification per README's "Verify, for
   real" checklist).
 - **Manual action still needed from the user (agent can't do this --
@@ -107,12 +109,21 @@ Template for each entry:
 - Blocked: <none | description>
 ```
 
+### Replaced Gemini with NVIDIA Parser (DeepSeek-v4-flash) — 2026-07-24
+- Files touched: `app/config.py`, `app/parser.py`, `app/telegram.py`, `app/mcp_server.py`, `tests/test_parser.py`, `.env.example`, `.env`, `README.md`, `docs/DEPLOYMENT.md`
+- Tests added: None (updated existing `test_parser.py` tests)
+- Full suite: 20/20 non-DB tests passing
+- What's next: Commit changes, push to GitHub, and deploy on Render (updating environment variables on Render to use `NVIDIA_API_KEY` and `NVIDIA_BASE_URL` instead of `GEMINI_API_KEY`).
+- Blocked: None
+
 ### Seeding script & Deployment documentation — 2026-07-24
-- Files touched: `app/seed.py`, `docs/DEPLOYMENT.md`
-- Tests added: None (documentation and db seeding helper script)
+- Files touched: `app/seed.py`, `docs/DEPLOYMENT.md`, `pyproject.toml`
+- Tests added: None (documentation, db seeding helper script, build fix)
 - Full suite: 42/42 passing
 - What's next: Manual verification and Render deployment (Tasks 25-27)
 - Blocked: None
+- Note: Fixed Render deployment build error (`Multiple top-level packages discovered...`) by explicitly restricting setuptools discovery to package `["app"]` in `pyproject.toml`.
+
 
 ### Live production verification + /mcp mount fix — 2026-07-24
 - User provided real `DATABASE_URL`/`TELEGRAM_BOT_TOKEN`/`TRIGGER_SECRET`/

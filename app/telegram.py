@@ -15,7 +15,7 @@ from fastapi import HTTPException
 
 from app.config import TELEGRAM_BOT_TOKEN, TRIGGER_SECRET
 from app.db import async_session_factory
-from app.parser import GeminiEventParser, ParsedEvent
+from app.parser import NvidiaEventParser, ParsedEvent
 from app.repository import EventRepository, get_default_user_id, get_or_create_category_id
 
 _TELEGRAM_API = "https://api.telegram.org/bot{token}/{method}"
@@ -59,7 +59,7 @@ async def handle_webhook(payload: dict, secret_header: str | None) -> dict:
         return {"ok": True, "skipped": "not a text message"}
     chat_id, text = extracted
 
-    parsed = await GeminiEventParser().parse(text)
+    parsed = await NvidiaEventParser().parse(text)
 
     async with async_session_factory() as session:
         user_id = await get_default_user_id(session)

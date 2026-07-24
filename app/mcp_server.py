@@ -14,7 +14,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from app.config import MCP_API_KEY
 from app.db import async_session_factory
 from app.main import verify_bearer_token
-from app.parser import GeminiEventParser
+from app.parser import NvidiaEventParser
 from app.repository import EventRepository, get_default_user_id, get_or_create_category_id
 from app.stats import category_summary as _category_summary_query
 from app.stats import month_summary as _month_summary_query
@@ -44,7 +44,7 @@ def _serialize_summary(result: dict) -> dict:
 @mcp.tool()
 async def log_event(text: str) -> dict:
     """Parse free-text finance message and write one event."""
-    parser = GeminiEventParser()
+    parser = NvidiaEventParser()
     parsed = await parser.parse(text)
 
     async with async_session_factory() as session:

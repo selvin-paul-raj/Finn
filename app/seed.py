@@ -1,6 +1,6 @@
-\"\"\"Database seeding script for Finn.
+"""Database seeding script for Finn.
 Creates a default user, default categories, and default accounts if they don't exist.
-\"\"\"
+"""
 
 import asyncio
 import sys

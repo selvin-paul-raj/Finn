@@ -44,7 +44,7 @@ confirmations, and corrections all live there, distinguished by
                     |
               FastAPI backend on Render  <-- all business logic, validation
                  /      \
-        Gemini API      Neon (serverless Postgres)
+        NVIDIA API      Neon (serverless Postgres)
     (parse text only,   (source of truth,
      no DB access)       stats via plain SQL)
 
@@ -59,7 +59,7 @@ confirmations, and corrections all live there, distinguished by
 | Backend | FastAPI (Python 3.12) on Render | 750 instance-hrs/mo, ~30-60s cold start |
 | Database | Neon (serverless Postgres) | 0.5 GB storage, 100 compute-hrs/mo |
 | Scheduler | GitHub Actions `cron:` | 2,000 Action-minutes/mo |
-| AI parsing | Gemini API | Free-tier RPM/RPD caps |
+| AI parsing | NVIDIA API | 40 RPM rate limit |
 | MCP server | Same FastAPI app, `/mcp` route | Same as backend |
 
 Full rationale, including *why not* Render Postgres and *why not* Render
@@ -77,7 +77,7 @@ finance-tracker/
 │   ├── db.py                 # SQLAlchemy engine/session, Neon connection
 │   ├── models.py             # SQLAlchemy models, mirrors the DDL exactly
 │   ├── schemas.py             # Pydantic shapes, incl. ParsedEvent
-│   ├── parser.py              # EventParser protocol + GeminiEventParser
+│   ├── parser.py              # EventParser protocol + NvidiaEventParser
 │   ├── telegram.py            # webhook handling, message sending
 │   ├── scheduler_logic.py     # "what's due today", called by /trigger
 │   ├── stats.py                # daily/monthly/category summaries
@@ -109,7 +109,8 @@ Documented in `.env.example`, never committed as real secrets:
 
 ```
 DATABASE_URL=            # Neon connection string
-GEMINI_API_KEY=
+NVIDIA_API_KEY=
+NVIDIA_BASE_URL=         # defaults to https://integrate.api.nvidia.com/v1
 TELEGRAM_BOT_TOKEN=
 TRIGGER_SECRET=          # bearer token GitHub Actions uses to call /trigger
 MCP_API_KEY=             # scopes /mcp to you specifically
@@ -127,7 +128,7 @@ git clone <your-repo-url> finance-tracker && cd finance-tracker
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-cp .env.example .env   # fill in DATABASE_URL, GEMINI_API_KEY, TELEGRAM_BOT_TOKEN
+cp .env.example .env   # fill in DATABASE_URL, NVIDIA_API_KEY, TELEGRAM_BOT_TOKEN
 
 alembic init alembic                             # first time only
 alembic revision --autogenerate -m "initial schema"
@@ -150,7 +151,7 @@ in `docs/TECHNICAL_REPORT.md` §5.
 
 1. **Provision first, before app code:**
    Neon project → run DDL from `docs/SCHEMA_AND_FLOW_DESIGN.md` §2 →
-   Telegram bot via @BotFather → Gemini API key from Google AI Studio →
+   Telegram bot via @BotFather → NVIDIA API key →
    private GitHub repo with all secrets under
    Settings → Secrets and variables → Actions.
 
@@ -193,9 +194,9 @@ category_summary(category)    -> spend trend for one category over time
 pending_events()              -> anything awaiting confirmation right now
 ```
 
-Security model (build before tool #2, not after): Gemini only ever sees raw
+Security model (build before tool #2, not after): NVIDIA only ever sees raw
 message text, never balances or history; every MCP call goes identity →
-authorization → tool → database; the backend validates every field Gemini
+authorization → tool → database; the backend validates every field NVIDIA
 returns before writing it — model output is untrusted input, same as any
 HTTP request body.
 
@@ -237,7 +238,7 @@ next spec, not this README.
 ## Build order (for Claude Code / anyone picking this up)
 
 1. Schema exactly as written in `docs/SCHEMA_AND_FLOW_DESIGN.md` §2
-2. Gemini-powered chat parser + 2x/day scheduler with correct trigger windows
+2. NVIDIA-powered chat parser + 2x/day scheduler with correct trigger windows
 3. Idempotent recurring-event generation (enforced by the DB constraint,
    not just app-code checks)
 4. Stats via plain SQL — no precompute needed at this scale
